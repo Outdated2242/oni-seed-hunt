@@ -6,7 +6,7 @@ on:
       target_hits:
         description: "Stop after N hits (per shard)"
         required: false
-        default: "5"
+        default: "2"
 
 jobs:
   hunt:
@@ -18,7 +18,7 @@ jobs:
         shard: [0, 1, 2, 3, 4, 5, 6, 7]
     env:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      TARGET_HITS: ${{ github.event.inputs.target_hits || '5' }}
+      TARGET_HITS: ${{ github.event.inputs.target_hits || '2' }}
       SHARD_INDEX: ${{ matrix.shard }}
       SHARD_TOTAL: 8
     steps:
