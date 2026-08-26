@@ -31,9 +31,10 @@ const rangeEnd = Math.floor((SEED_MAX / TOTAL_SHARDS) * (SHARD + 1));
 
 // ---- The hunt target -----------------------------------------------------
 // Cluster: 歪斜小行星 KF23-C (Klei Fest 2023 strange asteroid), all DLC packs
-// enabled, Ceres + Relica(古迹) + Aquatic fragments guaranteed-mixed in,
-// all 10 biome mixings guaranteed. Seed field in the coord is a placeholder —
-// the scanner varies it itself; hits are reported with their real seeds.
+// enabled, Ceres + Relica(古迹) + Aquatic fragments guaranteed-mixed in.
+// v2: biome mixings dropped (all-guaranteed compressed RNG → ~0 hits in 6h
+// across 8 shards). Seed field in the coord is a placeholder — the scanner
+// varies it itself; hits are reported with their real seeds.
 const FORM_STATE = {
   clusterPrefix: "KF23-C",
   seed: 0,
@@ -41,21 +42,11 @@ const FORM_STATE = {
   storyTraits: [],
   mixings: {
     DLC2Mixing: 1,            // Frosty Planet Pack — enable
-    IceCavesMixing: 2,        // 冰窟生态   — guaranteed
-    CarrotQuarryMixing: 2,    // 冷池生态   — guaranteed
-    SugarWoodsMixing: 2,      // 花蜜生态   — guaranteed
     CeresAsteroidMixing: 2,   // 谷神星碎片 — guaranteed
     DLC3Mixing: 1,            // Bionic Booster Pack — enable
     DLC4Mixing: 1,            // Prehistoric Planet Pack — enable
-    GardenMixing: 2,          // 花园生态 — guaranteed
-    RaptorMixing: 2,          // 寒羽生态 — guaranteed
-    WetlandsMixing: 2,        // 险沼生态 — guaranteed
     PrehistoricAsteroidMixing: 2, // 古迹星碎片 — guaranteed
     DLC5Mixing: 1,            // Aquatic Planet Pack — enable
-    BeachMixing: 2,           // 沙滩生态 — guaranteed
-    ReefMixing: 2,            // 珊瑚生态 — guaranteed
-    KelpForestMixing: 2,      // 藻林生态 — guaranteed
-    AbyssMixing: 2,           // 深渊生态 — guaranteed
     AquaticAsteroidMixing: 2  // 汪洋星碎片 — guaranteed
   }
 };
@@ -65,7 +56,8 @@ const FORM_STATE = {
 //   铁火山 molten_iron ≥1 each ≥0.3 kg/s
 //   储油石 Oil Reservoir ≥1
 //   污水泉 slush_water ≥1 each ≥3 kg/s
-//   world.sussy ≥ 0.60
+// v2: world.sussy ≥0.6 dropped — soft quality gate was the biggest hit-rate
+// killer; the four hard resource rules already guarantee a strong home.
 const SPEC = {
   constraints: [
     {
@@ -86,10 +78,6 @@ const SPEC = {
       kind: "world.geyser", mode: "require", world: { kind: "homeWorld" },
       geyser: "slush_water", countOp: ">=", n: 1,
       output: { kind: "uniform", op: ">=", kgPerSec: 3 }
-    },
-    {
-      kind: "world.sussy", mode: "require", world: { kind: "homeWorld" },
-      op: ">=", value: 0.6
     }
   ]
 };
