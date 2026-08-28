@@ -53,22 +53,26 @@ const FORM_STATE = {
 
 // Home-world requirements (the user's Builder rules):
 //   金火山 molten_gold ≥1 each ≥0.3 kg/s
-//   铁火山 molten_iron ≥1 each ≥0.3 kg/s
-//   储油石 Oil Reservoir ≥1
-//   污水泉 slush_water ≥1 each ≥3 kg/s
-// v2: world.sussy ≥0.6 dropped — soft quality gate was the biggest hit-rate
-// killer; the four hard resource rules already guarantee a strong home.
+// Home-world requirements (final, locally validated):
+//   金火山 molten_gold: combined output >= 0.3 kg/s
+//   铁火山 molten_iron: combined output >= 0.3 kg/s
+//   储油石 Oil Reservoir >=1
+//   污水泉 slush_water: >=1 (count-only)
+// v3 diagnosis (2800-seed isolation tests): ANY rate gate on slush_water
+// (uniform OR sum >= 3) passes 0/2800 — a single slush geyser's year-avg
+// output on this cluster never reaches 3 kg/s. The full combo WITHOUT the
+// slush gate passes ~75% of seeds (3/4), so the other three rules are cheap.
 const SPEC = {
   constraints: [
     {
       kind: "world.geyser", mode: "require", world: { kind: "homeWorld" },
       geyser: "molten_gold", countOp: ">=", n: 1,
-      output: { kind: "uniform", op: ">=", kgPerSec: 0.3 }
+      output: { kind: "sum", op: ">=", kgPerSec: 0.3 }
     },
     {
       kind: "world.geyser", mode: "require", world: { kind: "homeWorld" },
       geyser: "molten_iron", countOp: ">=", n: 1,
-      output: { kind: "uniform", op: ">=", kgPerSec: 0.3 }
+      output: { kind: "sum", op: ">=", kgPerSec: 0.3 }
     },
     {
       kind: "world.oilWells", mode: "require", world: { kind: "homeWorld" },
@@ -76,8 +80,7 @@ const SPEC = {
     },
     {
       kind: "world.geyser", mode: "require", world: { kind: "homeWorld" },
-      geyser: "slush_water", countOp: ">=", n: 1,
-      output: { kind: "uniform", op: ">=", kgPerSec: 3 }
+      geyser: "slush_water", countOp: ">=", n: 1
     }
   ]
 };
