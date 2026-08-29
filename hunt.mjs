@@ -27,7 +27,8 @@ const rangeEnd = Number(process.env.SEED_RANGE_END ?? defaultRangeEnd);
 
 // ---- The hunt target -----------------------------------------------------
 // Cluster: DLC Terra (V-SNDST-C), all DLC packs enabled, Ceres + Relica
-// + Aquatic fragments guaranteed-mixed in. Biome mixings stay disabled.
+// + Aquatic fragments guaranteed-mixed in. All ten biome mixings are set
+// to Likely (middle setting, value 1).
 const FORM_STATE = {
   clusterPrefix: "V-SNDST-C",
   seed: 0,
@@ -35,11 +36,21 @@ const FORM_STATE = {
   storyTraits: [],
   mixings: {
     DLC2Mixing: 1,            // Frosty Planet Pack — enable
+    IceCavesMixing: 1,        // 冰窟生态 — likely
+    CarrotQuarryMixing: 1,    // 冷池生态 — likely
+    SugarWoodsMixing: 1,      // 花蜜生态 — likely
     CeresAsteroidMixing: 2,   // 谷神星碎片 — guaranteed
     DLC3Mixing: 1,            // Bionic Booster Pack — enable
     DLC4Mixing: 1,            // Prehistoric Planet Pack — enable
+    GardenMixing: 1,          // 花园生态 — likely
+    RaptorMixing: 1,          // 寒羽生态 — likely
+    WetlandsMixing: 1,        // 险沼生态 — likely
     PrehistoricAsteroidMixing: 2, // 古迹星碎片 — guaranteed
     DLC5Mixing: 1,            // Aquatic Planet Pack — enable
+    BeachMixing: 1,           // 沙滩生态 — likely
+    ReefMixing: 1,            // 珊瑚生态 — likely
+    KelpForestMixing: 1,      // 藻林生态 — likely
+    AbyssMixing: 1,           // 深渊生态 — likely
     AquaticAsteroidMixing: 2  // 汪洋星碎片 — guaranteed
   }
 };
