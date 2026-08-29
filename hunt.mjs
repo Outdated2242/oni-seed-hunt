@@ -2,15 +2,9 @@
 // Spawns the @onimaxxing/sussy-seeds-mcp server over stdio and speaks JSON-RPC.
 
 import { spawn } from "node:child_process";
-import { writeFileSync } from "node:fs";
-
-const TOKEN = process.env.GH_TOKEN || "";
-const REPO = process.env.GITHUB_REPOSITORY || "";
-const RUN_URL = (attempt) =>
-  `https://github.com/${REPO}/actions/runs/${process.env.GITHUB_RUN_ID}/attempts/${attempt}`;
+import { writeFileSync, existsSync } from "node:fs";
 
 // Server entry: prefer a local install for clean stdio; fall back to npx on CI.
-import { existsSync } from "node:fs";
 const SERVER_CMD = "node";
 const LOCAL_CANDIDATES = [
   new URL("./node_modules/@onimaxxing/sussy-seeds-mcp/dist/index.js", import.meta.url),
@@ -26,17 +20,16 @@ const SHARD = Number(process.env.SHARD_INDEX || 0);
 const TOTAL_SHARDS = Number(process.env.SHARD_TOTAL || 1);
 // 32-bit seed space split across shards
 const SEED_MAX = 2 ** 32;
-const rangeStart = Math.floor((SEED_MAX / TOTAL_SHARDS) * SHARD);
-const rangeEnd = Math.floor((SEED_MAX / TOTAL_SHARDS) * (SHARD + 1));
+const defaultRangeStart = Math.floor((SEED_MAX / TOTAL_SHARDS) * SHARD);
+const defaultRangeEnd = Math.floor((SEED_MAX / TOTAL_SHARDS) * (SHARD + 1));
+const rangeStart = Number(process.env.SEED_RANGE_START ?? defaultRangeStart);
+const rangeEnd = Number(process.env.SEED_RANGE_END ?? defaultRangeEnd);
 
 // ---- The hunt target -----------------------------------------------------
-// Cluster: 歪斜小行星 KF23-C (Klei Fest 2023 strange asteroid), all DLC packs
-// enabled, Ceres + Relica(古迹) + Aquatic fragments guaranteed-mixed in.
-// v2: biome mixings dropped (all-guaranteed compressed RNG → ~0 hits in 6h
-// across 8 shards). Seed field in the coord is a placeholder — the scanner
-// varies it itself; hits are reported with their real seeds.
+// Cluster: DLC Terra (V-SNDST-C), all DLC packs enabled, Ceres + Relica
+// + Aquatic fragments guaranteed-mixed in. Biome mixings stay disabled.
 const FORM_STATE = {
-  clusterPrefix: "KF23-C",
+  clusterPrefix: "V-SNDST-C",
   seed: 0,
   otherRaw: "0",
   storyTraits: [],
@@ -51,29 +44,27 @@ const FORM_STATE = {
   }
 };
 
-// Home-world requirements (the user's Builder rules):
-//   金火山 molten_gold ≥1 each ≥0.3 kg/s
-// Home-world requirements (final, locally validated):
-//   金火山 molten_gold: combined output >= 0.3 kg/s
-//   铁火山 molten_iron: combined output >= 0.3 kg/s
+// Home-world requirements (requested v4):
+//   金/铁/铜/钴/铝火山: each type's combined output >= 0.3 kg/s
 //   储油石 Oil Reservoir >=1
-//   污水泉 slush_water: >=1 (count-only)
-// v3 diagnosis (2800-seed isolation tests): ANY rate gate on slush_water
-// (uniform OR sum >= 3) passes 0/2800 — a single slush geyser's year-avg
-// output on this cluster never reaches 3 kg/s. The full combo WITHOUT the
-// slush gate passes ~75% of seeds (3/4), so the other three rules are cheap.
+//   污水泉 slush_water >=1 (count-only)
+//   Home sussiness >=0.60
+// Note: adding world.sussy promotes the scan to full worldgen, so it is
+// substantially slower than the v3 partial-worldgen scan.
+const METAL_GEYSERS = [
+  ["molten_gold", "gold"],
+  ["molten_iron", "iron"],
+  ["molten_copper", "copper"],
+  ["molten_cobalt", "cobalt"],
+  ["molten_aluminum", "aluminum"]
+];
 const SPEC = {
   constraints: [
-    {
+    ...METAL_GEYSERS.map(([geyser]) => ({
       kind: "world.geyser", mode: "require", world: { kind: "homeWorld" },
-      geyser: "molten_gold", countOp: ">=", n: 1,
+      geyser, countOp: ">=", n: 1,
       output: { kind: "sum", op: ">=", kgPerSec: 0.3 }
-    },
-    {
-      kind: "world.geyser", mode: "require", world: { kind: "homeWorld" },
-      geyser: "molten_iron", countOp: ">=", n: 1,
-      output: { kind: "sum", op: ">=", kgPerSec: 0.3 }
-    },
+    })),
     {
       kind: "world.oilWells", mode: "require", world: { kind: "homeWorld" },
       op: ">=", n: 1
@@ -81,6 +72,10 @@ const SPEC = {
     {
       kind: "world.geyser", mode: "require", world: { kind: "homeWorld" },
       geyser: "slush_water", countOp: ">=", n: 1
+    },
+    {
+      kind: "world.sussy", mode: "require", world: { kind: "homeWorld" },
+      op: ">=", value: 0.6
     }
   ]
 };
